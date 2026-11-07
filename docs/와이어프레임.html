@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>안산시 빈집 안전관리 플랫폼 — 와이어프레임</title>
+<style>
+  :root{--k:#111;--d:#555;--m:#999;--l:#d4d4d4;--xl:#ececec;--w:#fff;--bg:#f5f5f5}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Geist,"Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;background:var(--bg);color:var(--k);font-size:13px;line-height:1.45}
+  button{font:inherit;color:inherit;cursor:pointer}
+  .top{position:sticky;top:0;z-index:10;background:var(--w);border-bottom:1px solid var(--k);padding:10px 16px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .top h1{font-size:14px;margin-right:auto}
+  .tab{border:1px solid var(--k);background:var(--w);padding:5px 10px;font-size:12px}
+  .tab[aria-selected=true]{background:var(--k);color:var(--w)}
+  .tab code{font-size:11px;opacity:.7}
+  main{padding:20px 16px 40px}
+  .view{display:none}.view.on{display:block}
+  .desc{max-width:900px;margin-bottom:16px;color:var(--d)}
+  .desc b{color:var(--k)}
+  .scroll{overflow-x:auto;padding-bottom:8px}
+  /* frames */
+  .browser{min-width:1080px;max-width:1280px;border:1.5px solid var(--k);background:var(--w)}
+  .bar{display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--k);padding:6px 10px;font-size:11px;color:var(--d)}
+  .bar .dots{display:flex;gap:4px}.bar .dots i{width:8px;height:8px;border:1px solid var(--d);border-radius:50%;display:block}
+  .bar .url{flex:1;border:1px solid var(--l);padding:2px 8px}
+  .phone{width:340px;flex:none;border:1.5px solid var(--k);border-radius:22px;background:var(--w);padding:10px;}
+  .phone .scr{border:1px solid var(--l);border-radius:12px;min-height:640px;display:flex;flex-direction:column;overflow:hidden}
+  .phones{display:flex;gap:24px;align-items:flex-start;min-width:max-content}
+  .cap{font-weight:600;margin:0 0 8px 4px}
+  /* primitives */
+  .box{border:1px solid var(--k);padding:10px;background:var(--w)}
+  .dash{border:1px dashed var(--m)}
+  .ph{background:var(--xl);border:1px solid var(--l);display:flex;align-items:center;justify-content:center;color:var(--m);font-size:11px;text-align:center;position:relative}
+  .ph.x{background:linear-gradient(to top right,transparent calc(50% - .5px),var(--l) 50%,transparent calc(50% + .5px)),linear-gradient(to bottom right,transparent calc(50% - .5px),var(--l) 50%,transparent calc(50% + .5px)),var(--xl)}
+  .ph.x span{background:var(--xl);padding:2px 6px}
+  .line{height:8px;background:var(--l);margin:5px 0}
+  .btn{border:1px solid var(--k);padding:7px 12px;text-align:center;background:var(--w);display:inline-block}
+  .btn.p{background:var(--k);color:var(--w)}
+  .btn.full{display:block;width:100%}
+  .in{border:1px solid var(--m);padding:7px 8px;color:var(--m);background:var(--w)}
+  .lbl{font-size:11px;font-weight:600;margin:10px 0 4px}
+  .chip{border:1px solid var(--m);padding:3px 8px;font-size:11px;display:inline-block;margin:0 4px 4px 0}
+  .chip.on{background:var(--k);color:var(--w);border-color:var(--k)}
+  .row{display:flex;gap:10px}.col{display:flex;flex-direction:column;gap:10px}
+  .grow{flex:1;min-width:0}
+  .note{display:inline-flex;gap:4px;align-items:flex-start;font-size:11px;color:var(--d);border-left:2px solid var(--k);padding:2px 0 2px 6px;background:var(--w)}
+  .num{display:inline-flex;width:18px;height:18px;border-radius:50%;background:var(--k);color:var(--w);font-size:10px;font-weight:700;align-items:center;justify-content:center;flex:none}
+  .muted{color:var(--m)} .s{font-size:11px} .h{font-weight:700}
+  table{border-collapse:collapse;width:100%;font-size:11px}
+  td,th{border:1px solid var(--l);padding:4px 6px;text-align:left}
+  th{background:var(--xl);font-weight:600}
+  /* flow */
+  .flow{display:flex;align-items:center;gap:0;min-width:820px;flex-wrap:nowrap}
+  .fnode{border:1.5px solid var(--k);background:var(--w);padding:12px;width:200px}
+  .arrow{flex:none;width:50px;height:1.5px;background:var(--k);position:relative}
+  .arrow:after{content:"";position:absolute;right:-1px;top:-4px;border-left:8px solid var(--k);border-top:5px solid transparent;border-bottom:5px solid transparent}
+  .branch{display:flex;flex-direction:column;gap:14px}
+  /* map */
+  .map{position:relative;background:var(--xl);border:1px solid var(--m);overflow:hidden;
+    background-image:linear-gradient(var(--l) 1px,transparent 1px),linear-gradient(90deg,var(--l) 1px,transparent 1px);background-size:40px 40px}
+  .road{position:absolute;background:var(--w);border:1px solid var(--l)}
+  .mk{position:absolute;width:14px;height:14px;border:1.5px solid var(--k)}
+  .mk.a{background:var(--k)} .mk.b{background:var(--d)} .mk.c{background:var(--m);border-color:var(--d)} .mk.d{background:var(--w)}
+  .mk.sel{outline:2px solid var(--k);outline-offset:3px}
+  .lg{display:flex;align-items:center;gap:6px;font-size:11px}
+  .lg .mk{position:static;width:10px;height:10px}
+  .steps{display:flex;gap:0;margin-bottom:12px;min-width:max-content}
+  .step{border:1px solid var(--k);padding:6px 12px;background:var(--w);font-size:12px;display:flex;gap:6px;align-items:center;margin-right:-1px}
+  .step[aria-selected=true]{background:var(--k);color:var(--w)}
+  .step[aria-selected=true] .num{background:var(--w);color:var(--k)}
+  .side a{display:block;padding:7px 10px;border-bottom:1px solid var(--l);color:var(--k);text-decoration:none}
+  .side a.on{background:var(--k);color:var(--w)}
+  .gridcell{position:absolute;border:1.5px dashed var(--k);background:rgba(0,0,0,.08)}
+  .link{cursor:pointer}
+  .link:focus-visible,.tab:focus-visible,.step:focus-visible{outline:2px solid var(--k);outline-offset:2px}
+</style>
+</head>
+<body>
+<div class="top" role="tablist" aria-label="와이어프레임 페이지">
+  <h1>안산시 빈집 안전관리 플랫폼 · Low-Fi 와이어프레임</h1>
+  <button class="tab" role="tab" data-v="flow" aria-selected="true">0. 전체 흐름</button>
+  <button class="tab" role="tab" data-v="home" aria-selected="false">1. 메인 <code>/</code></button>
+  <button class="tab" role="tab" data-v="report" aria-selected="false">2. 시민 제보 <code>/report</code></button>
+  <button class="tab" role="tab" data-v="admin" aria-selected="false">3. 시 담당자 <code>/admin</code></button>
+  <button class="tab" role="tab" data-v="patrol" aria-selected="false">4. 순찰대 <code>/patrol</code></button>
+</div>
+
+<main>
+<!-- 0. FLOW -->
+<section class="view on" id="flow">
+  <p class="desc"><b>사용자 흐름.</b> 메인에서 사용자 유형을 선택해 각 화면으로 이동합니다. 상자를 클릭하면 해당 와이어프레임으로 이동합니다.</p>
+  <div class="scroll">
+    <div class="flow">
+      <div class="fnode link" data-go="home" tabindex="0"><div class="h">메인 홈페이지</div><div class="s muted">/</div><div class="s" style="margin-top:6px">서비스 소개 · 유형 선택 카드 3개</div></div>
+      <div class="arrow"></div>
+      <div class="branch">
+        <div class="row" style="align-items:center"><div class="fnode link" data-go="report" tabindex="0"><div class="h">시민 제보 <span class="s muted">(모바일)</span></div><div class="s muted">/report</div><div class="s" style="margin-top:6px">작성 → 위치(구역) 선택 → 제출 완료</div><div class="chip" style="margin-top:6px">실제 구현</div></div></div>
+        <div class="row" style="align-items:center"><div class="fnode link" data-go="admin" tabindex="0"><div class="h">시 담당자 <span class="s muted">(데스크톱)</span></div><div class="s muted">/admin</div><div class="s" style="margin-top:6px">지도 → 건물 선택 → 사진 업로드 → AI 결과 → 점수 갱신</div><div class="chip" style="margin-top:6px">실제 구현</div></div></div>
+        <div class="row" style="align-items:center"><div class="fnode link" data-go="patrol" tabindex="0"><div class="h">순찰대</div><div class="s muted">/patrol</div><div class="s" style="margin-top:6px">스크린샷 표시만</div><div class="chip" style="margin-top:6px">시연용</div></div></div>
+      </div>
+      <div class="arrow" style="width:40px;background:var(--m)"></div>
+      <div class="fnode dash" style="width:220px;border-style:dashed">
+        <div class="h">데이터 연결 (개념)</div>
+        <div class="s" style="margin-top:6px">시민 제보 → 담당자 지도에 <b>구역 단위</b>로 누적 → 담당자가 현장점검 후 점수·상태 갱신</div>
+        <div class="s muted" style="margin-top:6px">※ API·DB·AI 미구현</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 1. HOME -->
+<section class="view" id="home">
+  <p class="desc"><b>메인 홈페이지 (/)</b> · 데스크톱 기준. 서비스 카드의 버튼을 클릭하면 해당 화면 와이어프레임으로 이동합니다.</p>
+  <div class="scroll"><div class="browser">
+    <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="url">ansan-vacant.kr/</span></div>
+    <header class="row" style="justify-content:space-between;align-items:center;padding:14px 28px;border-bottom:1px solid var(--k)">
+      <div class="row" style="align-items:center;gap:8px"><div class="ph" style="width:28px;height:28px">로고</div><b>안산시 빈집 안전관리 플랫폼</b></div>
+      <nav class="row s" style="gap:22px"><span>서비스 소개</span><span>시민 제보</span><span>담당자</span><span>순찰대</span><span>문의</span></nav>
+    </header>
+    <section class="row" style="padding:44px 28px;gap:32px;align-items:center;border-bottom:1px solid var(--l)">
+      <div class="grow">
+        <div class="s muted">HERO · 서비스 소개</div>
+        <div style="font-size:26px;font-weight:700;margin:8px 0">시민의 제보와 현장점검을 잇는<br>안산시 빈집 안전관리</div>
+        <div class="line" style="width:80%"></div><div class="line" style="width:65%"></div>
+        <div class="row" style="margin-top:16px"><span class="btn p link" data-go="report" tabindex="0">빈집 제보하기</span><span class="btn">서비스 알아보기</span></div>
+      </div>
+      <div class="ph x" style="width:420px;height:220px"><span>히어로 이미지 / 일러스트 플레이스홀더</span></div>
+    </section>
+    <section style="padding:32px 28px">
+      <div class="h" style="font-size:16px">이용하실 서비스를 선택하세요</div>
+      <div class="row" style="gap:16px;margin-top:14px">
+        <div class="box grow col"><div class="ph x" style="height:110px"><span>이미지</span></div><b>시민 제보</b><div class="line"></div><div class="line" style="width:70%"></div><span class="btn p full link" data-go="report" tabindex="0">제보하러 가기 →</span><span class="s muted">/report · 모바일 최적화</span></div>
+        <div class="box grow col"><div class="ph x" style="height:110px"><span>이미지</span></div><b>시 담당자</b><div class="line"></div><div class="line" style="width:70%"></div><span class="btn p full link" data-go="admin" tabindex="0">대시보드 열기 →</span><span class="s muted">/admin · 로그인 필요(추후)</span></div>
+        <div class="box grow col"><div class="ph x" style="height:110px"><span>이미지</span></div><b>순찰대 <span class="chip">시연용</span></b><div class="line"></div><div class="line" style="width:70%"></div><span class="btn full link" data-go="patrol" tabindex="0">시연 화면 보기 →</span><span class="s muted">/patrol · 스크린샷만</span></div>
+      </div>
+    </section>
+    <footer style="border-top:1px solid var(--k);padding:18px 28px;background:var(--xl)" class="row">
+      <div class="grow"><b class="s">안산시 빈집 안전관리 플랫폼</b><div class="line" style="width:40%;background:var(--m)"></div><div class="line" style="width:30%;background:var(--m)"></div></div>
+      <div class="s muted">개인정보처리방침 · 이용약관 · 문의처</div>
+    </footer>
+  </div></div>
+</section>
+
+<!-- 2. REPORT -->
+<section class="view" id="report">
+  <p class="desc"><b>시민 제보 (/report)</b> · 모바일 360px 기준, 3가지 상태. <b>개인정보·안전 원칙:</b> 시민 화면에는 개별 빈집 위치·마커를 표시하지 않고, 제보 위치만 구역(행정동/격자) 단위로 선택합니다.</p>
+  <div class="scroll"><div class="phones">
+    <!-- A -->
+    <div><div class="cap">상태 A · 제보 작성</div>
+    <div class="phone"><div class="scr">
+      <div class="row" style="padding:10px;border-bottom:1px solid var(--k);align-items:center"><span>←</span><b class="grow" style="text-align:center">빈집 제보</b><span class="s muted">1/2</span></div>
+      <div style="padding:12px;flex:1">
+        <div class="box dash s"><b>제보 안내</b><div class="line"></div><div class="line" style="width:75%"></div><div class="muted" style="margin-top:4px">긴급 위험(붕괴·화재)은 119로 신고</div></div>
+        <div class="lbl">제보 카테고리 *</div>
+        <div><span class="chip on">붕괴 위험</span><span class="chip">쓰레기 방치</span><span class="chip">무단 침입</span><span class="chip">화재 위험</span><span class="chip">해충·악취</span><span class="chip">기타</span></div>
+        <div class="lbl">제목 *</div><div class="in">제목을 입력하세요</div>
+        <div class="lbl">상세 내용 *</div><div class="in" style="height:76px">어떤 문제가 있는지 적어주세요</div>
+        <div class="lbl">사진 첨부 (최대 3장)</div>
+        <div class="row"><div class="ph" style="width:64px;height:64px;border-style:dashed">+ 추가</div><div class="ph x" style="width:64px;height:64px"><span>사진</span></div><div class="ph" style="width:64px;height:64px;border-style:dashed"></div></div>
+        <div class="s muted" style="margin-top:4px">얼굴·차량번호 자동 흐림 처리 안내</div>
+        <div class="lbl">위치 *</div>
+        <div class="in row" style="justify-content:space-between;color:var(--k)"><span>구역 선택하기</span><span>›</span></div>
+      </div>
+      <div style="padding:12px;border-top:1px solid var(--l)"><span class="btn p full">다음: 위치 선택</span></div>
+    </div></div></div>
+
+    <!-- B -->
+    <div><div class="cap">상태 B · 위치(구역) 선택</div>
+    <div class="phone"><div class="scr">
+      <div class="row" style="padding:10px;border-bottom:1px solid var(--k);align-items:center"><span>←</span><b class="grow" style="text-align:center">위치 선택</b><span class="s muted">2/2</span></div>
+      <div style="padding:12px;flex:1">
+        <div class="in">주소·동 이름 검색</div>
+        <div class="map" style="height:300px;margin-top:10px">
+          <div class="road" style="left:0;right:0;top:120px;height:14px"></div>
+          <div class="road" style="top:0;bottom:0;left:150px;width:14px"></div>
+          <div class="gridcell" style="left:80px;top:80px;width:120px;height:120px"></div>
+          <div style="position:absolute;left:132px;top:130px;width:16px;height:16px;border-radius:50%;border:2px solid var(--k);background:var(--w)"></div>
+          <div class="s" style="position:absolute;left:84px;top:84px;background:var(--w);padding:1px 4px">선택 구역</div>
+          <div class="s muted" style="position:absolute;left:8px;bottom:8px;background:var(--w);padding:2px 4px">빈집 마커 표시 안 함</div>
+        </div>
+        <div class="box" style="margin-top:10px"><div class="s muted">선택된 위치</div><b>단원구 ○○동 · 250m 구역</b><div class="s muted">상세 주소는 담당자에게만 전달</div></div>
+        <div class="note" style="margin-top:10px"><span class="num">!</span><span>지도에는 사용자가 찍은 지점과 구역 경계만 표시. 기존 빈집 위치·개수는 시민에게 노출하지 않음</span></div>
+        <div class="row" style="margin-top:10px"><span class="btn grow">현재 위치 사용</span></div>
+      </div>
+      <div style="padding:12px;border-top:1px solid var(--l)"><span class="btn p full">제보 제출</span></div>
+    </div></div></div>
+
+    <!-- C -->
+    <div><div class="cap">상태 C · 제출 완료</div>
+    <div class="phone"><div class="scr">
+      <div class="row" style="padding:10px;border-bottom:1px solid var(--k)"><b class="grow" style="text-align:center">제보 완료</b></div>
+      <div style="padding:20px 14px;flex:1;text-align:center">
+        <div class="ph" style="width:72px;height:72px;border-radius:50%;margin:20px auto">✓</div>
+        <div class="h" style="font-size:16px">제보가 접수되었습니다</div>
+        <div class="line" style="width:80%;margin:8px auto"></div><div class="line" style="width:60%;margin:0 auto"></div>
+        <table style="margin-top:20px"><tr><th>접수번호</th><td>R-2026-0000</td></tr><tr><th>카테고리</th><td>붕괴 위험</td></tr><tr><th>위치</th><td>○○동 구역</td></tr><tr><th>처리 상태</th><td>접수 → 검토 → 점검 → 완료</td></tr></table>
+        <div class="s muted" style="margin-top:8px">처리 결과는 상태 단계만 안내 (건물 정보 비공개)</div>
+      </div>
+      <div style="padding:12px;border-top:1px solid var(--l)" class="col"><span class="btn full">추가 제보하기</span><span class="btn p full link" data-go="home" tabindex="0">메인으로</span></div>
+    </div></div></div>
+  </div></div>
+</section>
+
+<!-- 3. ADMIN -->
+<section class="view" id="admin">
+  <p class="desc"><b>시 담당자 (/admin)</b> · 데스크톱 1280px 기준. 아래 단계를 눌러 담당자의 실제 작업 순서대로 오른쪽 상세 패널 상태를 확인하세요.</p>
+  <div class="scroll">
+    <div class="steps" role="tablist" aria-label="담당자 작업 단계">
+      <button class="step" role="tab" data-s="1" aria-selected="true"><span class="num">1</span>지도 기본</button>
+      <button class="step" role="tab" data-s="2" aria-selected="false"><span class="num">2</span>건물 선택 · 제보 확인</button>
+      <button class="step" role="tab" data-s="3" aria-selected="false"><span class="num">3</span>현장 사진 업로드</button>
+      <button class="step" role="tab" data-s="4" aria-selected="false"><span class="num">4</span>AI 결과 · 점수 갱신</button>
+    </div>
+    <div class="browser" style="min-width:1180px">
+      <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="url">ansan-vacant.kr/admin</span></div>
+      <div class="row" style="gap:0;min-height:720px">
+        <!-- sidebar -->
+        <aside class="side" style="width:180px;border-right:1px solid var(--k);background:var(--w)">
+          <div style="padding:12px 10px;border-bottom:1px solid var(--k)"><b class="s">빈집 관리 · 담당자</b></div>
+          <a class="on">우선순위 지도</a><a>시민 제보 목록</a><a>현장점검 기록</a><a>건물 목록</a><a>통계·리포트</a><a>설정</a>
+          <div style="padding:10px" class="s muted">담당: 홍길동 (단원구)</div>
+        </aside>
+        <div class="grow col" style="padding:14px;gap:12px">
+          <!-- kpi -->
+          <div class="row">
+            <div class="box grow"><div class="s muted">관리 대상 빈집</div><b style="font-size:20px">000</b></div>
+            <div class="box grow"><div class="s muted">신규 시민 제보</div><b style="font-size:20px">00</b></div>
+            <div class="box grow"><div class="s muted">고위험(긴급)</div><b style="font-size:20px">00</b></div>
+            <div class="box grow"><div class="s muted">이번 주 점검 예정</div><b style="font-size:20px">00</b></div>
+            <div class="box grow"><div class="s muted">점검 완료율</div><b style="font-size:20px">00%</b></div>
+          </div>
+          <div class="row" style="flex:1;align-items:stretch">
+            <!-- map -->
+            <div class="grow col" style="gap:8px">
+              <div class="row" style="align-items:center;flex-wrap:wrap;gap:6px">
+                <span class="in" style="width:200px">주소·건물 검색</span>
+                <span class="chip on">전체</span><span class="chip">위험도 상</span><span class="chip">제보 있음</span><span class="chip">미점검</span>
+                <span class="in s" style="padding:4px 8px">행정동 ▾</span><span class="in s" style="padding:4px 8px">기간 ▾</span>
+              </div>
+              <div class="map" style="flex:1;min-height:540px">
+                <div class="road" style="left:0;right:0;top:200px;height:18px"></div>
+                <div class="road" style="left:0;right:0;top:400px;height:12px"></div>
+                <div class="road" style="top:0;bottom:0;left:260px;width:18px"></div>
+                <div class="road" style="top:0;bottom:0;left:470px;width:12px"></div>
+                <div class="mk a" style="left:90px;top:80px"></div><div class="mk a" id="selMk" style="left:320px;top:150px"></div>
+                <div class="mk b" style="left:180px;top:300px"></div><div class="mk b" style="left:400px;top:260px"></div><div class="mk b" style="left:520px;top:90px"></div>
+                <div class="mk c" style="left:60px;top:450px"></div><div class="mk c" style="left:350px;top:460px"></div><div class="mk c" style="left:540px;top:330px"></div><div class="mk c" style="left:210px;top:120px"></div>
+                <div class="mk d" style="left:130px;top:240px"></div><div class="mk d" style="left:430px;top:500px"></div><div class="mk d" style="left:300px;top:340px"></div>
+                <div style="position:absolute;left:338px;top:136px;font-size:11px;background:var(--w);border:1px solid var(--k);padding:1px 4px" id="selTip" hidden>선택: 고잔동 123-4</div>
+                <div class="col s" style="position:absolute;right:10px;top:10px;gap:4px"><span class="btn" style="padding:2px 8px">+</span><span class="btn" style="padding:2px 8px">−</span></div>
+                <div class="box" style="position:absolute;left:10px;bottom:10px;padding:8px">
+                  <div class="s h" style="margin-bottom:4px">범례 · 우선순위 점수</div>
+                  <div class="lg"><span class="mk a"></span>긴급 (80+)</div>
+                  <div class="lg"><span class="mk b"></span>높음 (60–79)</div>
+                  <div class="lg"><span class="mk c"></span>보통 (40–59)</div>
+                  <div class="lg"><span class="mk d"></span>낮음 (~39)</div>
+                  <div class="lg" style="margin-top:4px"><span style="width:10px;height:10px;border:1.5px dashed var(--k)"></span>시민 제보 구역</div>
+                </div>
+                <div class="note" style="position:absolute;right:10px;bottom:10px;max-width:220px" id="mapNote"><span class="num">1</span><span>마커 클릭 시 오른쪽 패널에 건물 상세 표시</span></div>
+              </div>
+            </div>
+            <!-- detail panel -->
+            <aside style="width:340px;flex:none;border:1px solid var(--k);background:var(--w);display:flex;flex-direction:column">
+              <div id="panel" style="padding:12px;flex:1"></div>
+            </aside>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 4. PATROL -->
+<section class="view" id="patrol">
+  <p class="desc"><b>순찰대 (/patrol)</b> · 시연용 페이지. 실제 기능이나 별도 관리 화면 없이 스크린샷만 표시합니다.</p>
+  <div class="scroll"><div class="browser" style="min-width:900px;max-width:1080px">
+    <div class="bar"><span class="dots"><i></i><i></i><i></i></span><span class="url">ansan-vacant.kr/patrol</span></div>
+    <header class="row" style="justify-content:space-between;align-items:center;padding:14px 28px;border-bottom:1px solid var(--k)"><b>안산시 빈집 안전관리 플랫폼</b><span class="s muted">헤더 (메인과 동일)</span></header>
+    <div style="padding:28px">
+      <div style="font-size:22px;font-weight:700">순찰대 화면 미리보기</div>
+      <div class="box dash row" style="margin-top:12px;align-items:center"><span class="chip on">시연용</span><span class="s">이 페이지는 순찰대 앱의 예시 화면(스크린샷)입니다. 실제 기능은 제공되지 않습니다.</span></div>
+      <div class="row" style="margin-top:18px;gap:16px">
+        <div class="grow col" style="gap:6px"><div class="ph x" style="height:340px"><span>스크린샷 1 · 순찰 경로</span></div><div class="s muted">캡션 텍스트</div></div>
+        <div class="grow col" style="gap:6px"><div class="ph x" style="height:340px"><span>스크린샷 2 · 현장 체크</span></div><div class="s muted">캡션 텍스트</div></div>
+        <div class="grow col" style="gap:6px"><div class="ph x" style="height:340px"><span>스크린샷 3 · 결과 전송</span></div><div class="s muted">캡션 텍스트</div></div>
+      </div>
+      <div style="margin-top:24px;text-align:center"><span class="btn p link" data-go="home" tabindex="0">← 메인으로 돌아가기</span></div>
+    </div>
+  </div></div>
+</section>
+</main>
+
+<script>
+const show = v => {
+  document.querySelectorAll('.view').forEach(s => s.classList.toggle('on', s.id === v));
+  document.querySelectorAll('.tab').forEach(t => t.setAttribute('aria-selected', t.dataset.v === v));
+  window.scrollTo(0, 0);
+};
+document.querySelectorAll('.tab').forEach(t => t.onclick = () => show(t.dataset.v));
+document.querySelectorAll('[data-go]').forEach(el => {
+  el.onclick = () => show(el.dataset.go);
+  el.onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); show(el.dataset.go); } };
+});
+
+const head = `<div class="row" style="justify-content:space-between;align-items:flex-start"><div><div class="s muted">선택한 건물</div><b>단원구 고잔동 123-4</b><div class="s muted">단독주택 · 1985년 · 공실 추정 3년</div></div><span class="s">✕</span></div>
+<div class="row" style="margin-top:8px"><div class="box grow" style="padding:6px"><div class="s muted">우선순위 점수</div><b>{S}</b></div><div class="box grow" style="padding:6px"><div class="s muted">상태</div><b>{T}</b></div></div>`;
+const reports = `<div class="lbl">시민 제보 목록 (3)</div>
+<table><tr><th>일자</th><th>분류</th><th>제목</th></tr><tr><td>08.02</td><td>붕괴</td><td>담장 기울어짐</td></tr><tr><td>07.28</td><td>쓰레기</td><td>마당 쓰레기 방치</td></tr><tr><td>07.15</td><td>침입</td><td>창문 파손</td></tr></table>`;
+const sec = (n, t, body, active) => `<div style="margin-top:12px;${active ? '' : 'opacity:.45'}"><div class="row" style="align-items:center;gap:6px"><span class="num">${n}</span><b class="s">${t}</b></div><div style="margin-top:6px">${body}</div></div>`;
+const upload = done => done
+  ? `<div class="row"><div class="ph x" style="width:70px;height:56px"><span>사진</span></div><div class="ph x" style="width:70px;height:56px"><span>사진</span></div><div class="ph x" style="width:70px;height:56px"><span>사진</span></div></div><div class="s muted" style="margin-top:4px">3장 업로드 · 점검일 2026.08.11</div>`
+  : `<div class="ph" style="height:90px;border-style:dashed">현장 사진 끌어놓기 / 클릭해 업로드</div><div class="row" style="margin-top:6px"><span class="in grow s">점검일</span><span class="in grow s">점검자</span></div><span class="btn p full" style="margin-top:6px">AI 판독 요청</span>`;
+const ai = `<table><tr><th>항목</th><th>판독</th><th>신뢰도</th></tr><tr><td>지붕 손상</td><td>심각</td><td>0.9</td></tr><tr><td>외벽 균열</td><td>보통</td><td>0.8</td></tr><tr><td>쓰레기 적치</td><td>있음</td><td>0.9</td></tr><tr><td>출입문 개방</td><td>없음</td><td>0.7</td></tr></table><div class="ph" style="height:60px;margin-top:6px">손상 영역 표시 이미지</div><div class="s muted" style="margin-top:4px">※ AI 결과는 참고용 · 담당자가 최종 판단</div>`;
+const update = `<div class="row"><div class="grow"><div class="s muted">현재</div><b>72 · 높음</b></div><div>→</div><div class="grow"><div class="s muted">AI 제안</div><b>85 · 긴급</b></div></div>
+<div class="in s" style="margin-top:6px">최종 점수 직접 입력 / 조정</div><div class="in s" style="margin-top:6px">상태 ▾ (관찰 / 조치 필요 / 철거 검토 / 완료)</div><div class="in s" style="margin-top:6px;height:40px">담당자 메모</div><span class="btn p full" style="margin-top:6px">점수·상태 저장</span>`;
+
+const panels = {
+  1: { note: '마커 클릭 시 오른쪽 패널에 건물 상세 표시', html: `<div class="ph" style="height:100%;min-height:500px;border-style:dashed;flex-direction:column;gap:6px"><b style="color:var(--d)">건물 상세 패널</b><span>지도에서 건물을 선택하세요</span><span>(선택 전 빈 상태)</span></div>` },
+  2: { note: '선택된 건물이 강조되고, 패널에 제보 목록 표시', html: head.replace('{S}','72').replace('{T}','높음') + reports + sec(3,'현장점검 사진 업로드','<span class="btn full">점검 시작하기</span>',false) + sec(4,'AI 판독 결과','<div class="s muted">사진 업로드 후 표시</div>',false) + sec(5,'점수·상태 갱신','<div class="s muted">AI 결과 확인 후 활성화</div>',false) },
+  3: { note: '현장 방문 후 사진 업로드 → AI 판독 요청', html: head.replace('{S}','72').replace('{T}','점검 중') + `<details><summary class="lbl" style="cursor:pointer">시민 제보 목록 (3) — 접힘</summary>${reports}</details>` + sec(3,'현장점검 사진 업로드',upload(false),true) + sec(4,'AI 판독 결과','<div class="s muted">판독 대기</div>',false) + sec(5,'점수·상태 갱신','<div class="s muted">AI 결과 확인 후 활성화</div>',false) },
+  4: { note: 'AI 결과 확인 후 담당자가 최종 점수·상태 저장 → 지도 마커 갱신', html: head.replace('{S}','72 → 85').replace('{T}','점검 완료') + sec(3,'현장점검 사진',upload(true),true) + sec(4,'AI 판독 결과',ai,true) + sec(5,'점수·상태 갱신',update,true) }
+};
+const setStep = n => {
+  document.querySelectorAll('.step').forEach(b => b.setAttribute('aria-selected', b.dataset.s == n));
+  document.getElementById('panel').innerHTML = panels[n].html;
+  document.querySelector('#mapNote span:last-child').textContent = panels[n].note;
+  document.querySelector('#mapNote .num').textContent = n;
+  document.getElementById('selMk').classList.toggle('sel', n > 1);
+  document.getElementById('selTip').hidden = n === 1;
+};
+document.querySelectorAll('.step').forEach(b => b.onclick = () => setStep(+b.dataset.s));
+document.getElementById('selMk').onclick = () => setStep(2);
+setStep(1);
+</script>
+</body>
+</html>

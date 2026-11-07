@@ -2,3 +2,6 @@
 data/AL_D010_41_20261009/
 data/build_gyunggi.txt
 data/안산 건물 전체 (GIS건물통합정보 202610).csv
+
+# Next.js 앱(별도 저장소)
+app/
