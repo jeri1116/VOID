@@ -50,6 +50,19 @@ sims = [mnn(random.sample(HP, len(P))) for _ in range(199)]
 exp = sum(sims) / len(sims)
 p = (1 + sum(1 for s in sims if s <= obs)) / (1 + len(sims))
 print(f'[평균최근접이웃] 고유 위치 {len(P)}곳, 관측 {obs:.0f}m, 주택 무작위 기대 {exp:.0f}m, R={obs/exp:.2f}, p={p:.3f}')
+island = lambda d: d.startswith('대부') or d == '선감동'
+Pi = [v for k, v in pts.items() if not island(k[0])]
+HPi = [(float(h['x']), float(h['y'])) for h in H if not island(h['법정동'])]
+obs2 = mnn(Pi); sims2 = [mnn(random.sample(HPi, len(Pi))) for _ in range(199)]
+exp2 = sum(sims2) / len(sims2); p2 = (1 + sum(1 for s in sims2 if s <= obs2)) / (1 + len(sims2))
+print(f'[평균최근접이웃·대부도권 제외] {len(Pi)}곳, 관측 {obs2:.0f}m, 기대 {exp2:.0f}m, R={obs2/exp2:.2f}, p={p2:.3f}')
+
+# 4-1) 같은 가린 지번에 빈집 2호 이상
+for label, target in (('계획대상 158호', plan.values()),
+                      ('상시관리+안전조치 144호', [r for r in plan.values() if r['정비방식'] in ('상시관리', '안전조치')])):
+    cnt = collections.Counter((r['법정동'], r['지번(가림)']) for r in target)
+    multi = {k: v for k, v in cnt.items() if v >= 2}
+    print(f'[같은 지번 2호 이상 · {label}] {len(multi)}곳, {sum(multi.values())}호 (방문지 {len(cnt)}곳)')
 
 # 5) 1ha(반경 56.4m) 안 최대 빈집 호수
 V = [(float(loc[c]['x']), float(loc[c]['y']), plan[c]['법정동']) for c in plan]
