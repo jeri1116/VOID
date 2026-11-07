@@ -81,14 +81,21 @@ VOID/
 
 ## 앱 실행
 
+앱은 별도 저장소다. VOID를 clone해도 `app/` 폴더는 생기지 않는다. VOID 폴더 안에서 앱 저장소를 `app`으로 clone한다.
+
 ```bash
+git clone -b feature/real-data https://github.com/yejin1228/wnpwnpdldi.git app
 cd app
 npm install
 npm run dev
 ```
 
-- Gemini 키는 `app/.env.local`의 `GEMINI_API_KEY`에 둔다.
-- 이 키는 서버에서만 쓴다.
+- 브랜치 안내
+  - `feature/real-data`: 실제 데이터(130곳)와 SOS 4단계 색을 넣은 작업본이다.
+  - `main`: 처음 v0 화면이다(가상 건물). 배포 링크는 `main`을 보여 준다.
+- 확인: http://localhost:3000/admin 에서 158호 / 130곳, 빨강 24 · 주황 65 · 초록 41이 보이면 정상이다.
+- 이미 `app/`가 있다면 `git -C app fetch origin`으로 받고 `git -C app switch feature/real-data`로 바꾼다.
+- 지금은 API 키 없이 돌아간다. Gemini를 붙이면 키는 `app/.env.local`의 `GEMINI_API_KEY`에 둔다. 이 키는 서버에서만 쓴다.
 
 ## 지킬 것
 
