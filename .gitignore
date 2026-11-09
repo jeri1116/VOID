@@ -9,3 +9,12 @@ app/
 # Impeccable 스킬(외부, 로컬 설치)
 .claude/skills/impeccable/
 .claude/agents/impeccable-*.md
+
+# 빈집 위치가 드러나는 데이터는 공개 저장소에 올리지 않는다(빈집법 제15조⑥). scripts/build_houses.py로 다시 만든다
+data/houses.json
+data/안산 빈집 158호 위치 근사.csv
+# 외부 자료(재배포하지 않음)
+data/\[가이드\]건물DB 활용방법.pdf
+data/\[자료건수\]건물DB*.txt
+이전문서/2026-11-08_발표준비/data/
+tmp/
